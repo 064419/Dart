@@ -1,191 +1,3562 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><title>Dart 7 Spiele V3</title><style>
-:root{--b:#111318;--p:#1a1e26;--p2:#252b38;--t:#f5f7fb;--m:#9aa5b5;--g:#44d17a;--r:#ff6464;--y:#ffcf5a;--l:#343c4b}*{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}header{background:#0c0e12;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--l)}h1{margin:0;font-size:24px}main{padding:16px}.screen{display:none}.active{display:block}.card{background:var(--p);border:1px solid var(--l);border-radius:16px;padding:16px;margin-bottom:14px}.btn{border:0;border-radius:12px;padding:13px 16px;min-height:50px;font-weight:700;background:var(--p2);color:var(--t)}.green{background:var(--g);color:#071108}.red{background:var(--r);color:#200404}.yellow{background:var(--y);color:#241b00}.btn:disabled{opacity:.4}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.players{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}input,select{width:100%;background:#0e1117;color:var(--t);border:1px solid var(--l);border-radius:12px;padding:13px;font-size:18px}.games{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.gamebtn{min-height:85px;font-size:18px}.top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}.stat{background:var(--p2);border-radius:12px;padding:11px}.stat b{display:block;font-size:21px;margin-top:4px}.notice{background:#0e1117;border:1px solid var(--l);border-radius:12px;padding:12px;margin-bottom:14px}.multis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.nums{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.num{min-height:58px;font-size:20px}.throws{display:flex;flex-wrap:wrap;gap:8px;min-height:45px}.throw{background:#0e1117;border:1px solid var(--l);border-radius:999px;padding:8px 10px}.throw button{border:0;margin-left:6px;border-radius:50%;background:var(--p2);color:white}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--l);text-align:center}th:first-child,td:first-child{text-align:left}.small{min-height:30px;padding:4px 7px;font-size:12px}.muted{color:var(--m);font-size:14px}.footer{position:sticky;bottom:0;background:#0c0e12;border-top:1px solid var(--l);padding:10px}@media(orientation:portrait){.games{grid-template-columns:repeat(2,1fr)}.top{grid-template-columns:repeat(2,1fr)}.nums{grid-template-columns:repeat(4,1fr)}}
-</style></head><body>
+<!doctype html>
+<html lang="de">
 
-<header><div><h1>🎯 Dart – 7 Spiele</h1><div class="muted">iPad Testversion V3</div></div><button class="btn" onclick="home()">Gesamtwertung</button></header>
+<head>
+  <meta charset="utf-8">
 
-<main>
-<section id="home" class="screen active">
-<div class="card"><h2>Spieler</h2><div id="playerInputs" class="players"></div><div class="row" style="margin-top:12px"><button class="btn" onclick="addPlayer()">+ Spieler</button><button class="btn" onclick="removePlayer()">− Spieler</button><button class="btn green" onclick="savePlayers()">Spieler übernehmen</button></div></div>
-<div class="card"><h2>Spiele</h2><div id="games" class="games"></div></div>
-<div class="card"><h2>Gesamtwertung</h2><div id="overall"></div></div>
-<div class="card"><h3>Daten löschen</h3><div class="muted">Zum Löschen muss RESET eingegeben werden.</div><br><button class="btn red" onclick="resetAll()">Alle Ergebnisse löschen…</button></div>
-</section>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
 
-<section id="game" class="screen">
-<div class="top"><div class="stat">Spiel<b id="gameName"></b></div><div class="stat">Spieler<b id="playerName"></b></div><div class="stat">Runde<b id="round"></b></div><div class="stat">Punkte<b id="score"></b></div></div>
-<div id="notice" class="notice"></div>
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
 
-<div id="checkoutBox" class="card" style="display:none"><h3>170 – Checkout ansagen</h3><div class="row"><input id="checkout" type="number" min="2" max="170" placeholder="z. B. 101" style="flex:1"><button class="btn green" onclick="setCheckout()">Ansage übernehmen</button></div></div>
+  <title>Dart – 7 Spiele V4</title>
 
-<div id="killerBox" class="card" style="display:none"><h3>Killer</h3><div id="killer"></div><br><button class="btn green" onclick="saveKiller()">Killer-Wertung speichern</button></div>
+  <style>
 
-<div id="throwCard" class="card"><h3>Aktuelle Aufnahme</h3><div id="throws" class="throws"></div><div class="row" style="margin-top:12px"><button class="btn yellow" onclick="undo()">↶ Letzten Pfeil zurück</button><button class="btn" onclick="miss()">Miss / 0</button><button id="confirm" class="btn green" onclick="confirmTurn()" disabled>Aufnahme bestätigen →</button></div><div class="muted" style="margin-top:8px">Nach jedem Pfeil kann die Aufnahme bestätigt werden. Nicht geworfene Pfeile zählen als 0.</div></div>
+    :root {
+      --background: #111318;
+      --panel: #1a1e26;
+      --panel-light: #252b38;
+      --text: #f5f7fb;
+      --muted: #9aa5b5;
+      --green: #44d17a;
+      --red: #ff6464;
+      --yellow: #ffcf5a;
+      --line: #343c4b;
+    }
 
-<div id="inputCard" class="card"><h3>Multiplikator</h3><div class="multis"><button id="single" class="btn" onclick="setMult('S')">Single</button><button id="double" class="btn" onclick="setMult('D')">Double</button><button id="triple" class="btn" onclick="setMult('T')">Triple</button></div><h3>Feld</h3><div id="numbers" class="nums"></div><div class="muted" style="margin-top:10px">25 = Outer Bull. Double 25 = Bullseye 50.</div></div>
+    * {
+      box-sizing: border-box;
+    }
 
-<div class="card"><h3>Zwischenstand</h3><div id="gameTable"></div></div>
-</section>
-</main>
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
 
-<div class="footer"><button class="btn" onclick="home()">← Gesamtwertung</button></div>
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    header {
+      background: #0c0e12;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    h2,
+    h3 {
+      margin-top: 4px;
+    }
+
+    main {
+      padding: 16px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      min-height: 50px;
+      font-weight: 700;
+      background: var(--panel-light);
+      color: var(--text);
+    }
+
+    .btn.green {
+      background: var(--green);
+      color: #071108;
+    }
+
+    .btn.red {
+      background: var(--red);
+      color: #200404;
+    }
+
+    .btn.yellow {
+      background: var(--yellow);
+      color: #241b00;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .players {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      background: #0e1117;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 18px;
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .game-button {
+      min-height: 85px;
+      font-size: 18px;
+    }
+
+    .top-info {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: var(--panel-light);
+      border-radius: 12px;
+      padding: 11px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 21px;
+      margin-top: 4px;
+    }
+
+    .notice {
+      background: #0e1117;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .multipliers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .numbers {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .number-button {
+      min-height: 58px;
+      font-size: 20px;
+    }
+
+    .throws {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 45px;
+    }
+
+    .throw {
+      background: #0e1117;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 10px;
+    }
+
+    .throw button {
+      border: 0;
+      margin-left: 6px;
+      border-radius: 50%;
+      background: var(--panel-light);
+      color: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    .small-button {
+      min-height: 30px;
+      padding: 4px 7px;
+      font-size: 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer {
+      position: sticky;
+      bottom: 0;
+      background: #0c0e12;
+      border-top: 1px solid var(--line);
+      padding: 10px;
+    }
+
+    @media (orientation: portrait) {
+
+      .game-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .top-info {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .numbers {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <header>
+
+    <div>
+      <h1>🎯 Dart – 7 Spiele</h1>
+      <div class="muted">
+        iPad Testversion V4
+      </div>
+    </div>
+
+    <button
+      class="btn"
+      onclick="goHome()"
+    >
+      Gesamtwertung
+    </button>
+
+  </header>
+
+
+  <main>
+
+    <!-- STARTSEITE -->
+
+    <section
+      id="homeScreen"
+      class="screen active"
+    >
+
+      <div class="card">
+
+        <h2>Spieler</h2>
+
+        <div
+          id="playerInputs"
+          class="players"
+        ></div>
+
+        <div
+          class="row"
+          style="margin-top:12px"
+        >
+
+          <button
+            class="btn"
+            onclick="addPlayer()"
+          >
+            + Spieler
+          </button>
+
+          <button
+            class="btn"
+            onclick="removePlayer()"
+          >
+            − Spieler
+          </button>
+
+          <button
+            class="btn green"
+            onclick="savePlayers()"
+          >
+            Spieler übernehmen
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <h2>Spiele</h2>
+
+        <div
+          id="gameButtons"
+          class="game-grid"
+        ></div>
+
+      </div>
+
+
+      <div class="card">
+
+        <h2>Gesamtwertung</h2>
+
+        <div id="overallTable"></div>
+
+      </div>
+
+
+      <div class="card">
+
+        <h3>Daten löschen</h3>
+
+        <div class="muted">
+          Zum Schutz vor versehentlichem Löschen
+          muss RESET eingegeben werden.
+        </div>
+
+        <br>
+
+        <button
+          class="btn red"
+          onclick="resetAllResults()"
+        >
+          Alle Ergebnisse löschen…
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- SPIEL -->
+
+    <section
+      id="gameScreen"
+      class="screen"
+    >
+
+      <div class="top-info">
+
+        <div class="stat">
+          Spiel
+          <b id="gameName"></b>
+        </div>
+
+        <div class="stat">
+          Spieler
+          <b id="playerName"></b>
+        </div>
+
+        <div class="stat">
+          Runde
+          <b id="roundInfo"></b>
+        </div>
+
+        <div class="stat">
+          Punkte
+          <b id="scoreInfo"></b>
+        </div>
+
+      </div>
+
+
+      <div
+        id="gameNotice"
+        class="notice"
+      ></div>
+
+
+      <!-- 170 ANSAGE -->
+
+      <div
+        id="checkoutBox"
+        class="card"
+        style="display:none"
+      >
+
+        <h3>170 – Checkout ansagen</h3>
+
+        <div class="row">
+
+          <input
+            id="checkoutInput"
+            type="number"
+            min="2"
+            max="170"
+            placeholder="z. B. 101"
+            style="flex:1"
+          >
+
+          <button
+            class="btn green"
+            onclick="setCheckoutTarget()"
+          >
+            Ansage übernehmen
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- KILLER -->
+
+      <div
+        id="killerBox"
+        class="card"
+        style="display:none"
+      >
+
+        <h3>Killer</h3>
+
+        <div id="killerRanking"></div>
+
+        <br>
+
+        <button
+          class="btn green"
+          onclick="saveKiller()"
+        >
+          Killer-Wertung speichern
+        </button>
+
+      </div>
+
+
+      <!-- AKTUELLE AUFNAHME -->
+
+      <div
+        id="throwCard"
+        class="card"
+      >
+
+        <h3>Aktuelle Aufnahme</h3>
+
+        <div
+          id="currentThrows"
+          class="throws"
+        ></div>
+
+
+        <div
+          class="row"
+          style="margin-top:12px"
+        >
+
+          <button
+            class="btn yellow"
+            onclick="undoLastDart()"
+          >
+            ↶ Letzten Pfeil zurück
+          </button>
+
+
+          <button
+            class="btn"
+            onclick="throwMiss()"
+          >
+            Miss / 0
+          </button>
+
+
+          <button
+            id="confirmTurnButton"
+            class="btn green"
+            onclick="confirmTurn()"
+            disabled
+          >
+            Aufnahme bestätigen →
+          </button>
+
+        </div>
+
+
+        <div
+          class="muted"
+          style="margin-top:8px"
+        >
+          Nach jedem Pfeil kann die Aufnahme bestätigt werden.
+          Du kannst aber bis zu drei Pfeile eingeben.
+          Nicht geworfene Pfeile zählen bei vorzeitiger Bestätigung als 0.
+        </div>
+
+      </div>
+
+
+      <!-- PFEILEINGABE -->
+
+      <div
+        id="dartInputBox"
+        class="card"
+      >
+
+        <h3>Multiplikator</h3>
+
+        <div class="multipliers">
+
+          <button
+            id="singleButton"
+            class="btn"
+            onclick="setMultiplier('S')"
+          >
+            Single
+          </button>
+
+          <button
+            id="doubleButton"
+            class="btn"
+            onclick="setMultiplier('D')"
+          >
+            Double
+          </button>
+
+          <button
+            id="tripleButton"
+            class="btn"
+            onclick="setMultiplier('T')"
+          >
+            Triple
+          </button>
+
+        </div>
+
+
+        <h3>Feld</h3>
+
+        <div
+          id="numberButtons"
+          class="numbers"
+        ></div>
+
+
+        <div
+          class="muted"
+          style="margin-top:10px"
+        >
+          25 = Outer Bull.
+          Double 25 = Bullseye 50.
+        </div>
+
+      </div>
+
+
+      <!-- ZWISCHENSTAND -->
+
+      <div class="card">
+
+        <h3>Zwischenstand</h3>
+
+        <div id="gameTable"></div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <div class="footer">
+
+    <button
+      class="btn"
+      onclick="goHome()"
+    >
+      ← Gesamtwertung
+    </button>
+
+  </div>
+
 
 <script>
-const G=[{id:"highscore",name:"Highscore"},{id:"301",name:"301 Double Out"},{id:"shanghai",name:"Shanghai"},{id:"clock",name:"Clock"},{id:"killer",name:"Killer"},{id:"170",name:"170"},{id:"bull",name:"Bull"}];
-let players=["Spieler 1","Spieler 2","Spieler 3","Spieler 4"],results={},state=null,mult="S";
 
-function save(){localStorage.setItem("dart7",JSON.stringify({players,results}))}
-function load(){try{let d=JSON.parse(localStorage.getItem("dart7"));if(d){players=d.players||players;results=d.results||{}}}catch(e){}renderPlayers();renderGames();renderOverall();buildNums()}
-function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active")}
-function home(){show("home");renderOverall()}
+  const GAMES = [
 
-function renderPlayers(){let b=document.getElementById("playerInputs");b.innerHTML="";players.forEach((p,i)=>{let x=document.createElement("input");x.id="p"+i;x.value=p;b.appendChild(x)})}
-function addPlayer(){if(players.length<12){players.push("Spieler "+(players.length+1));renderPlayers()}}
-function removePlayer(){if(players.length>2){players.pop();renderPlayers()}}
-function savePlayers(){players=players.map((p,i)=>document.getElementById("p"+i).value.trim()||p);save();renderGames();renderOverall()}
+    {
+      id: "highscore",
+      name: "Highscore"
+    },
 
-function renderGames(){let b=document.getElementById("games");b.innerHTML="";G.forEach(g=>{let x=document.createElement("button");x.className="btn gamebtn";x.textContent=g.name;x.onclick=()=>startGame(g.id);b.appendChild(x)})}
-function buildNums(){let b=document.getElementById("numbers");b.innerHTML="";for(let i=1;i<=20;i++)addNum(b,i);addNum(b,25)}
-function addNum(b,n){let x=document.createElement("button");x.className="btn num";x.textContent=n;x.onclick=()=>throwNum(n);b.appendChild(x)}
+    {
+      id: "301",
+      name: "301 Double Out"
+    },
 
-function startGame(id){
-state={game:id,player:0,round:1,darts:[],checkout:null,ready:false,reason:"",start301:null,data:{}};
-players.forEach(p=>state.data[p]={score:id==="301"?301:0,finished301:false,best170:null});
-document.getElementById("checkoutBox").style.display=id==="170"?"block":"none";
-document.getElementById("killerBox").style.display=id==="killer"?"block":"none";
-document.getElementById("throwCard").style.display=id==="killer"?"none":"block";
-document.getElementById("inputCard").style.display=id==="killer"?"none":"block";
-if(id==="killer")renderKiller();setMult("S");update();show("game")
-}
+    {
+      id: "shanghai",
+      name: "Shanghai"
+    },
 
-function cp(){return players[state.player]}function pd(){return state.data[cp()]}function gn(){return G.find(g=>g.id===state.game).name}
-function update(){
-if(!state)return;
-document.getElementById("gameName").textContent=gn();
-document.getElementById("playerName").textContent=cp();
-document.getElementById("round").textContent=state.round+"/7"+(state.game==="shanghai"?" • Ziel "+(state.round+6):"");
-document.getElementById("score").textContent=state.game==="301"?(pd().finished301?"0 ✓":pd().score):state.game==="170"?(pd().best170??0):pd().score;
-document.getElementById("notice").textContent=notice();
-document.getElementById("throws").innerHTML=state.darts.length?state.darts.map((d,i)=>`<span class="throw">${d.label} = ${d.value}<button onclick="removeDart(${i})">×</button></span>`).join(""):'<span class="muted">Noch kein Pfeil</span>';
-let c=document.getElementById("confirm");c.disabled=!state.ready;c.textContent=state.reason==="checkout"?"Checkout bestätigen →":state.reason==="bust"?"Bust bestätigen →":"Aufnahme bestätigen →";
-renderGameTable()
-}
+    {
+      id: "clock",
+      name: "Clock"
+    },
 
-function notice(){
-if(state.game==="highscore")return"7 Runden × 3 Pfeile. Alle Punkte werden addiert.";
-if(state.game==="301")return"Start 301. Bust setzt auf den Beginn der Aufnahme zurück. Checkout nur mit Doppel oder Bullseye.";
-if(state.game==="shanghai")return"Ziel: "+(state.round+6)+". Single + Double + Triple der Zielzahl = +50 Bonus.";
-if(state.game==="clock")return"Ziel: Doppel "+state.round+". Jeder Treffer +10. Kein Treffer = −10.";
-if(state.game==="killer")return"1. Platz = 100, 2. = 50, 3. = 25, Rest = 0.";
-if(state.game==="170")return state.checkout?"Angesagt: "+state.checkout:"Vor jeder Runde Checkout-Zahl ansagen.";
-if(state.game==="bull")return"Nur 25 zählt. Single 25 = 25, Double 25 = Bullseye 50."
-}
+    {
+      id: "killer",
+      name: "Killer"
+    },
 
-function setMult(m){mult=m;["S","D","T"].forEach(x=>document.getElementById(x==="S"?"single":x==="D"?"double":"triple").style.outline=x===m?"3px solid #44d17a":"none")}
+    {
+      id: "170",
+      name: "170"
+    },
 
-function throwNum(n){
-if(!state||state.ready)return;
-if(state.game==="170"&&!state.checkout){alert("Bitte zuerst Checkout-Zahl ansagen.");return}
-if(n===25&&mult==="T"){alert("Triple 25 gibt es nicht.");setMult("S");return}
-let v=mult==="S"?n:mult==="D"?n*2:n*3,l=n===25?(mult==="D"?"Bullseye":"25"):mult+n;
-register({base:n,mult,value:v,label:l,double:mult==="D"});setMult("S")
-}
+    {
+      id: "bull",
+      name: "Bull"
+    }
 
-function miss(){if(!state||state.ready)return;register({base:0,mult:"M",value:0,label:"Miss",double:false});setMult("S")}
+  ];
 
-function register(d){
-if(state.game==="301")return reg301(d);
-if(state.game==="shanghai")return regShanghai(d);
-if(state.game==="clock")return regClock(d);
-if(state.game==="170")return reg170(d);
-if(state.game==="bull")return regBull(d);
-state.darts.push(d);pd().score+=d.value;state.ready=true;state.reason="normal";update()
-}
 
-function reg301(d){
-let p=pd();if(state.darts.length===0)state.start301=p.score;state.darts.push(d);
-let next=p.score-d.value,bust=next<0||next===1||(next===0&&!d.double);
-if(bust){p.score=state.start301;state.ready=true;state.reason="bust";update();return}
-p.score=next;
-if(next===0&&d.double){p.finished301=true;state.ready=true;state.reason="checkout";update();return}
-state.ready=true;state.reason="normal";update()
-}
+  let players = [
+    "Spieler 1",
+    "Spieler 2",
+    "Spieler 3",
+    "Spieler 4"
+  ];
 
-function regShanghai(d){let t=state.round+6,c=d.base===t?d.value:0;state.darts.push({...d,counted:c});pd().score+=c;state.ready=true;state.reason="normal";update()}
-function regClock(d){let hit=d.mult==="D"&&d.base===state.round;state.darts.push({...d,hit});if(hit)pd().score+=10;state.ready=true;state.reason="normal";update()}
-function regBull(d){let c=d.base===25?d.value:0;state.darts.push({...d,counted:c});pd().score+=c;state.ready=true;state.reason="normal";update()}
 
-function setCheckout(){let n=parseInt(document.getElementById("checkout").value);if(!n||n<2||n>170){alert("Bitte Zahl zwischen 2 und 170 eingeben.");return}state.checkout=n;state.darts=[];state.ready=false;update()}
-function reg170(d){state.darts.push(d);let s=state.darts.reduce((a,x)=>a+x.value,0);state.ready=true;state.reason=s===state.checkout&&d.double?"checkout":"normal";update()}
+  let results = {};
 
-function confirmTurn(){
-if(!state.ready)return;
-if(state.game==="shanghai"){let t=state.round+6,k=new Set(state.darts.filter(d=>d.base===t).map(d=>d.mult));if(k.has("S")&&k.has("D")&&k.has("T"))pd().score+=50}
-if(state.game==="clock"&&!state.darts.some(d=>d.hit))pd().score-=10;
-if(state.game==="170"&&state.reason==="checkout")pd().best170=pd().best170===null?state.checkout:Math.max(pd().best170,state.checkout);
-state.darts=[];state.ready=false;state.reason="";state.start301=null;
-if(state.game==="170"){state.checkout=null;document.getElementById("checkout").value=""}
-nextPlayer()
-}
+  let state = null;
 
-function nextPlayer(){
-state.player++;
-if(state.player>=players.length){state.player=0;state.round++;if(state.round>7){finishGame();return}}
-if(state.game==="301"){let n=0;while(state.data[cp()].finished301&&n<players.length){state.player++;if(state.player>=players.length){state.player=0;state.round++;if(state.round>7){finishGame();return}}n++}}
-setMult("S");update()
-}
+  let multiplier = "S";
 
-function undo(){if(state.darts.length)removeDart(state.darts.length-1)}
-function removeDart(i){rebuild(state.darts.filter((_,x)=>x!==i))}
 
-function rebuild(rem){
-let p=pd();
-if(state.game==="highscore")p.score-=state.darts.reduce((a,d)=>a+d.value,0);
-if(state.game==="shanghai")p.score-=state.darts.reduce((a,d)=>a+(d.counted||0),0);
-if(state.game==="clock")p.score-=state.darts.reduce((a,d)=>a+(d.hit?10:0),0);
-if(state.game==="bull")p.score-=state.darts.reduce((a,d)=>a+(d.counted||0),0);
-if(state.game==="301"&&state.start301!==null){p.score=state.start301;p.finished301=false}
-state.darts=[];state.ready=false;state.reason="";
-rem.forEach(d=>{if(state.game==="301")reg301({...d});else if(state.game==="shanghai")regShanghai({...d});else if(state.game==="clock")regClock({...d});else if(state.game==="bull")regBull({...d});else if(state.game==="170")state.darts.push({...d});else{state.darts.push({...d});p.score+=d.value}});
-state.ready=state.darts.length>0;if(state.ready&&!state.reason)state.reason="normal";setMult("S");update()
-}
+  /*
+   * SPEICHERN / LADEN
+   */
 
-function finishGame(){
-if(!results[state.game])results[state.game]={};
-players.forEach(p=>{let d=state.data[p];results[state.game][p]=state.game==="170"?(d.best170===null?-170:d.best170):d.score});
-save();alert(gn()+" abgeschlossen.");home()
-}
+  function saveData() {
 
-function renderGameTable(){
-let h="<table><tr><th>Spieler</th><th>Wert</th><th></th></tr>";
-players.forEach((p,i)=>{let d=state.data[p],v=state.game==="301"?(d.finished301?"0 ✓":d.score):state.game==="170"?(d.best170??"–"):d.score;h+=`<tr><td>${esc(p)}</td><td>${v}</td><td><button class="btn small" onclick="correctLive(${i})">Korrigieren</button></td></tr>`});
-document.getElementById("gameTable").innerHTML=h+"</table>"
-}
+    localStorage.setItem(
+      "dart7",
+      JSON.stringify({
+        players: players,
+        results: results
+      })
+    );
 
-function correctLive(i){let p=players[i],d=state.data[p],old=state.game==="170"?(d.best170??0):d.score,x=prompt("Neuen Wert für "+p+" eingeben:",old);if(x===null)return;let n=Number(x);if(!Number.isFinite(n))return alert("Ungültige Zahl.");if(state.game==="170")d.best170=n;else d.score=n;if(state.game==="301")d.finished301=n===0;update()}
+  }
 
-function renderOverall(){
-let h="<table><tr><th>Spieler</th>"+G.map(g=>"<th>"+g.name+"</th>").join("")+"<th>Gesamt</th></tr>";
-let rows=players.map(p=>{let t=0,hs=results.highscore?.[p],r=results["301"]?.[p];if(hs!=null)t+=hs;if(r!=null)t-=r;["shanghai","clock","killer","170","bull"].forEach(id=>{let v=results[id]?.[p];if(v!=null)t+=v});return{p,t}}).sort((a,b)=>b.t-a.t);
-rows.forEach((r,i)=>{h+=`<tr><td>${i+1}. ${esc(r.p)}</td>`;G.forEach(g=>{let v=results[g.id]?.[r.p];h+=`<td>${v==null?"–":v}<br><button class="btn small" onclick="correctSaved('${js(r.p)}','${g.id}')">Korrigieren</button></td>`});h+=`<td><b>${r.t}</b></td></tr>`});
-document.getElementById("overall").innerHTML=h+"</table>"
-}
 
-function correctSaved(p,g){if(!results[g])results[g]={};let x=prompt(p+" – "+G.find(x=>x.id===g).name+" korrigieren:",results[g][p]??"");if(x===null)return;if(x.trim()==="")results[g][p]=null;else{let n=Number(x);if(!Number.isFinite(n))return alert("Ungültige Zahl.");results[g][p]=n}save();renderOverall()}
+  function loadData() {
 
-function renderKiller(){
-let h="";players.forEach((p,i)=>{h+=`<div class="row" style="margin-bottom:8px"><div style="flex:1"><b>${esc(p)}</b></div><select id="k${i}" style="max-width:220px"><option value="0">0 Punkte</option><option value="100">1. Platz – 100</option><option value="50">2. Platz – 50</option>${players.length>=3?'<option value="25">3. Platz – 25</option>':""}</select></div>`});document.getElementById("killer").innerHTML=h
-}
+    try {
 
-function saveKiller(){
-let v=players.map((_,i)=>Number(document.getElementById("k"+i).value));
-if(v.filter(x=>x===100).length!==1||v.filter(x=>x===50).length!==1)return alert("Bitte genau einen 1. und einen 2. Platz vergeben.");
-if(players.length>=3&&v.filter(x=>x===25).length!==1)return alert("Bitte genau einen 3. Platz vergeben.");
-if(!results.killer)results.killer={};players.forEach((p,i)=>results.killer[p]=v[i]);save();alert("Killer-Wertung gespeichert.");home()
-}
+      const stored =
+        localStorage.getItem("dart7");
 
-function resetAll(){let x=prompt("Zum Löschen aller Ergebnisse bitte RESET eingeben:");if(x!=="RESET"){if(x!==null)alert("Nicht gelöscht.");return}results={};save();renderOverall();alert("Alle Ergebnisse wurden gelöscht.")}
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function js(s){return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
-load();
-</script></body></html>
+      if (stored) {
+
+        const data =
+          JSON.parse(stored);
+
+        players =
+          data.players || players;
+
+        results =
+          data.results || {};
+
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+
+    renderPlayerInputs();
+
+    renderGameButtons();
+
+    renderOverallTable();
+
+    buildNumberButtons();
+
+  }
+
+
+  /*
+   * BILDSCHIRMWECHSEL
+   */
+
+  function showScreen(screenId) {
+
+    document
+      .querySelectorAll(".screen")
+      .forEach(screen => {
+
+        screen.classList.remove("active");
+
+      });
+
+
+    document
+      .getElementById(screenId)
+      .classList.add("active");
+
+  }
+
+
+  function goHome() {
+
+    showScreen("homeScreen");
+
+    renderOverallTable();
+
+  }
+
+
+  /*
+   * SPIELER
+   */
+
+  function renderPlayerInputs() {
+
+    const box =
+      document.getElementById("playerInputs");
+
+
+    box.innerHTML = "";
+
+
+    players.forEach(
+      (player, index) => {
+
+        const input =
+          document.createElement("input");
+
+
+        input.id =
+          "playerInput" + index;
+
+
+        input.value =
+          player;
+
+
+        box.appendChild(input);
+
+      }
+    );
+
+  }
+
+
+  function addPlayer() {
+
+    if (players.length >= 12) {
+      return;
+    }
+
+
+    players.push(
+      "Spieler " + (players.length + 1)
+    );
+
+
+    renderPlayerInputs();
+
+  }
+
+
+  function removePlayer() {
+
+    if (players.length <= 2) {
+      return;
+    }
+
+
+    players.pop();
+
+
+    renderPlayerInputs();
+
+  }
+
+
+  function savePlayers() {
+
+    players =
+      players.map(
+        (oldName, index) => {
+
+          const value =
+            document
+              .getElementById(
+                "playerInput" + index
+              )
+              .value
+              .trim();
+
+
+          return value || oldName;
+
+        }
+      );
+
+
+    saveData();
+
+    renderGameButtons();
+
+    renderOverallTable();
+
+  }
+
+
+  /*
+   * SPIELAUSWAHL
+   */
+
+  function renderGameButtons() {
+
+    const box =
+      document.getElementById(
+        "gameButtons"
+      );
+
+
+    box.innerHTML = "";
+
+
+    GAMES.forEach(game => {
+
+      const button =
+        document.createElement("button");
+
+
+      button.className =
+        "btn game-button";
+
+
+      button.textContent =
+        game.name;
+
+
+      button.onclick =
+        () => startGame(game.id);
+
+
+      box.appendChild(button);
+
+    });
+
+  }
+
+
+  /*
+   * ZAHLENTASTEN
+   */
+
+  function buildNumberButtons() {
+
+    const box =
+      document.getElementById(
+        "numberButtons"
+      );
+
+
+    box.innerHTML = "";
+
+
+    for (
+      let number = 1;
+      number <= 20;
+      number++
+    ) {
+
+      createNumberButton(
+        box,
+        number
+      );
+
+    }
+
+
+    createNumberButton(
+      box,
+      25
+    );
+
+  }
+
+
+  function createNumberButton(
+    box,
+    number
+  ) {
+
+    const button =
+      document.createElement("button");
+
+
+    button.className =
+      "btn number-button";
+
+
+    button.textContent =
+      number;
+
+
+    button.onclick =
+      () => throwNumber(number);
+
+
+    box.appendChild(button);
+
+  }
+
+
+  /*
+   * SPIEL STARTEN
+   */
+
+  function startGame(gameId) {
+
+    state = {
+
+      game: gameId,
+
+      playerIndex: 0,
+
+      round: 1,
+
+      darts: [],
+
+      checkoutTarget: null,
+
+      turnStart301: null,
+
+      turnStatus: "normal",
+
+      data: {}
+
+    };
+
+
+    players.forEach(player => {
+
+      state.data[player] = {
+
+        score:
+          gameId === "301"
+            ? 301
+            : 0,
+
+        finished301: false,
+
+        best170: null
+
+      };
+
+    });
+
+
+    document
+      .getElementById("checkoutBox")
+      .style.display =
+        gameId === "170"
+          ? "block"
+          : "none";
+
+
+    document
+      .getElementById("killerBox")
+      .style.display =
+        gameId === "killer"
+          ? "block"
+          : "none";
+
+
+    document
+      .getElementById("throwCard")
+      .style.display =
+        gameId === "killer"
+          ? "none"
+          : "block";
+
+
+    document
+      .getElementById("dartInputBox")
+      .style.display =
+        gameId === "killer"
+          ? "none"
+          : "block";
+
+
+    if (gameId === "killer") {
+
+      renderKiller();
+
+    }
+
+
+    setMultiplier("S");
+
+    updateGameScreen();
+
+    showScreen("gameScreen");
+
+  }
+
+
+  /*
+   * AKTUELLER SPIELER
+   */
+
+  function currentPlayer() {
+
+    return players[
+      state.playerIndex
+    ];
+
+  }
+
+
+  function currentPlayerData() {
+
+    return state.data[
+      currentPlayer()
+    ];
+
+  }
+
+
+  function currentGameName() {
+
+    return GAMES
+      .find(
+        game =>
+          game.id === state.game
+      )
+      .name;
+
+  }
+
+
+  /*
+   * ANZEIGE
+   */
+
+  function updateGameScreen() {
+
+    if (!state) {
+      return;
+    }
+
+
+    document
+      .getElementById("gameName")
+      .textContent =
+        currentGameName();
+
+
+    document
+      .getElementById("playerName")
+      .textContent =
+        currentPlayer();
+
+
+    let roundText =
+      state.round + "/7";
+
+
+    if (state.game === "shanghai") {
+
+      roundText +=
+        " • Ziel " +
+        (state.round + 6);
+
+    }
+
+
+    document
+      .getElementById("roundInfo")
+      .textContent =
+        roundText;
+
+
+    document
+      .getElementById("scoreInfo")
+      .textContent =
+        getDisplayedScore();
+
+
+    document
+      .getElementById("gameNotice")
+      .textContent =
+        getGameNotice();
+
+
+    renderCurrentThrows();
+
+    updateConfirmButton();
+
+    renderGameTable();
+
+  }
+
+
+  function getDisplayedScore() {
+
+    const data =
+      currentPlayerData();
+
+
+    if (state.game === "301") {
+
+      return data.finished301
+        ? "0 ✓"
+        : data.score;
+
+    }
+
+
+    if (state.game === "170") {
+
+      return data.best170 === null
+        ? 0
+        : data.best170;
+
+    }
+
+
+    return data.score;
+
+  }
+
+
+  function getGameNotice() {
+
+    if (state.game === "highscore") {
+
+      return (
+        "7 Runden × 3 Pfeile. " +
+        "Alle Punkte werden addiert."
+      );
+
+    }
+
+
+    if (state.game === "301") {
+
+      return (
+        "Start bei 301. " +
+        "Bust setzt den Punktestand auf den Beginn der Aufnahme zurück. " +
+        "Checkout nur mit Doppel oder Bullseye."
+      );
+
+    }
+
+
+    if (state.game === "shanghai") {
+
+      return (
+        "Ziel dieser Runde: " +
+        (state.round + 6) +
+        ". Single + Double + Triple der Zielzahl = +50 Bonus."
+      );
+
+    }
+
+
+    if (state.game === "clock") {
+
+      return (
+        "Ziel: Doppel " +
+        state.round +
+        ". Jeder Treffer = +10 Punkte. " +
+        "Kein Treffer in der Aufnahme = −10 Punkte."
+      );
+
+    }
+
+
+    if (state.game === "killer") {
+
+      return (
+        "1. Platz = 100, " +
+        "2. Platz = 50, " +
+        "3. Platz = 25, " +
+        "alle anderen = 0."
+      );
+
+    }
+
+
+    if (state.game === "170") {
+
+      if (state.checkoutTarget) {
+
+        return (
+          "Angesagt: " +
+          state.checkoutTarget
+        );
+
+      }
+
+
+      return (
+        "Vor jeder Runde eine Checkout-Zahl ansagen."
+      );
+
+    }
+
+
+    if (state.game === "bull") {
+
+      return (
+        "Nur das Feld 25 zählt. " +
+        "Single 25 = 25 Punkte. " +
+        "Double 25 = Bullseye 50."
+      );
+
+    }
+
+  }
+
+
+  /*
+   * AKTUELLE PFEILE
+   */
+
+  function renderCurrentThrows() {
+
+    const box =
+      document.getElementById(
+        "currentThrows"
+      );
+
+
+    if (
+      state.darts.length === 0
+    ) {
+
+      box.innerHTML =
+        '<span class="muted">' +
+        'Noch kein Pfeil' +
+        '</span>';
+
+      return;
+
+    }
+
+
+    box.innerHTML =
+      state.darts
+        .map(
+          (dart, index) => {
+
+            return (
+
+              '<span class="throw">' +
+
+              dart.label +
+              " = " +
+              dart.value +
+
+              '<button onclick="removeDart(' +
+              index +
+              ')">' +
+
+              "×" +
+
+              "</button>" +
+
+              "</span>"
+
+            );
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /*
+   * BESTÄTIGUNGSBUTTON
+   */
+
+  function updateConfirmButton() {
+
+    const button =
+      document.getElementById(
+        "confirmTurnButton"
+      );
+
+
+    /*
+     * WICHTIG:
+     * Nach mindestens einem Pfeil
+     * darf bestätigt werden.
+     */
+
+    button.disabled =
+      state.darts.length === 0;
+
+
+    if (
+      state.turnStatus === "checkout"
+    ) {
+
+      button.textContent =
+        "Checkout bestätigen →";
+
+    } else if (
+      state.turnStatus === "bust"
+    ) {
+
+      button.textContent =
+        "Bust bestätigen →";
+
+    } else {
+
+      button.textContent =
+        "Aufnahme bestätigen →";
+
+    }
+
+  }
+
+
+  /*
+   * MULTIPLIKATOR
+   */
+
+  function setMultiplier(value) {
+
+    multiplier = value;
+
+
+    const values =
+      ["S", "D", "T"];
+
+
+    values.forEach(item => {
+
+      let buttonId;
+
+
+      if (item === "S") {
+
+        buttonId =
+          "singleButton";
+
+      } else if (
+        item === "D"
+      ) {
+
+        buttonId =
+          "doubleButton";
+
+      } else {
+
+        buttonId =
+          "tripleButton";
+
+      }
+
+
+      const button =
+        document.getElementById(
+          buttonId
+        );
+
+
+      button.style.outline =
+        item === value
+          ? "3px solid #44d17a"
+          : "none";
+
+    });
+
+  }
+
+
+  /*
+   * DARF NOCH EIN PFEIL
+   * EINGEGEBEN WERDEN?
+   */
+
+  function canThrowAnotherDart() {
+
+    if (!state) {
+      return false;
+    }
+
+
+    /*
+     * Maximal drei Pfeile.
+     */
+
+    if (
+      state.darts.length >= 3
+    ) {
+
+      return false;
+
+    }
+
+
+    /*
+     * Bust beendet die Aufnahme.
+     */
+
+    if (
+      state.turnStatus === "bust"
+    ) {
+
+      return false;
+
+    }
+
+
+    /*
+     * Erfolgreiches Checkout
+     * beendet die Aufnahme.
+     */
+
+    if (
+      state.turnStatus === "checkout"
+    ) {
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /*
+   * ZAHL WERFEN
+   */
+
+  function throwNumber(number) {
+
+    if (
+      !canThrowAnotherDart()
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      state.game === "170" &&
+      !state.checkoutTarget
+    ) {
+
+      alert(
+        "Bitte zuerst eine Checkout-Zahl ansagen."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      number === 25 &&
+      multiplier === "T"
+    ) {
+
+      alert(
+        "Triple 25 gibt es nicht."
+      );
+
+
+      setMultiplier("S");
+
+      return;
+
+    }
+
+
+    let value;
+
+
+    if (
+      multiplier === "S"
+    ) {
+
+      value = number;
+
+    } else if (
+      multiplier === "D"
+    ) {
+
+      value =
+        number * 2;
+
+    } else {
+
+      value =
+        number * 3;
+
+    }
+
+
+    let label;
+
+
+    if (number === 25) {
+
+      if (
+        multiplier === "D"
+      ) {
+
+        label =
+          "Bullseye";
+
+      } else {
+
+        label =
+          "25";
+
+      }
+
+    } else {
+
+      label =
+        multiplier + number;
+
+    }
+
+
+    const dart = {
+
+      base: number,
+
+      multiplier: multiplier,
+
+      value: value,
+
+      label: label,
+
+      isDouble:
+        multiplier === "D"
+
+    };
+
+
+    registerDart(dart);
+
+
+    /*
+     * Nach jedem Pfeil
+     * automatisch zurück auf Single.
+     */
+
+    setMultiplier("S");
+
+  }
+
+
+  /*
+   * MISS / 0
+   */
+
+  function throwMiss() {
+
+    if (
+      !canThrowAnotherDart()
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+     * Auch bei 170 muss zuerst
+     * die Zahl angesagt werden.
+     */
+
+    if (
+      state.game === "170" &&
+      !state.checkoutTarget
+    ) {
+
+      alert(
+        "Bitte zuerst eine Checkout-Zahl ansagen."
+      );
+
+      return;
+
+    }
+
+
+    const dart = {
+
+      base: 0,
+
+      multiplier: "M",
+
+      value: 0,
+
+      label: "Miss",
+
+      isDouble: false
+
+    };
+
+
+    registerDart(dart);
+
+
+    setMultiplier("S");
+
+  }
+
+
+  /*
+   * PFEIL VERARBEITEN
+   */
+
+  function registerDart(dart) {
+
+    if (
+      state.game === "301"
+    ) {
+
+      register301(dart);
+
+      return;
+
+    }
+
+
+    if (
+      state.game === "shanghai"
+    ) {
+
+      registerShanghai(dart);
+
+      return;
+
+    }
+
+
+    if (
+      state.game === "clock"
+    ) {
+
+      registerClock(dart);
+
+      return;
+
+    }
+
+
+    if (
+      state.game === "170"
+    ) {
+
+      register170(dart);
+
+      return;
+
+    }
+
+
+    if (
+      state.game === "bull"
+    ) {
+
+      registerBull(dart);
+
+      return;
+
+    }
+
+
+    /*
+     * Highscore
+     */
+
+    state.darts.push(dart);
+
+
+    currentPlayerData().score +=
+      dart.value;
+
+
+    state.turnStatus =
+      "normal";
+
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * 301 DOUBLE OUT
+   */
+
+  function register301(dart) {
+
+    const data =
+      currentPlayerData();
+
+
+    /*
+     * Stand zu Beginn der Aufnahme merken.
+     */
+
+    if (
+      state.darts.length === 0
+    ) {
+
+      state.turnStart301 =
+        data.score;
+
+    }
+
+
+    state.darts.push(dart);
+
+
+    const nextScore =
+      data.score -
+      dart.value;
+
+
+    const bust =
+      nextScore < 0 ||
+
+      nextScore === 1 ||
+
+      (
+        nextScore === 0 &&
+        !dart.isDouble
+      );
+
+
+    if (bust) {
+
+      data.score =
+        state.turnStart301;
+
+
+      state.turnStatus =
+        "bust";
+
+
+      updateGameScreen();
+
+      return;
+
+    }
+
+
+    data.score =
+      nextScore;
+
+
+    /*
+     * Gültiges Double-Out.
+     */
+
+    if (
+      nextScore === 0 &&
+      dart.isDouble
+    ) {
+
+      data.finished301 =
+        true;
+
+
+      state.turnStatus =
+        "checkout";
+
+
+      updateGameScreen();
+
+      return;
+
+    }
+
+
+    state.turnStatus =
+      "normal";
+
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * SHANGHAI
+   */
+
+  function registerShanghai(
+    dart
+  ) {
+
+    const target =
+      state.round + 6;
+
+
+    let countedValue = 0;
+
+
+    if (
+      dart.base === target
+    ) {
+
+      countedValue =
+        dart.value;
+
+    }
+
+
+    const storedDart = {
+
+      ...dart,
+
+      countedValue:
+        countedValue
+
+    };
+
+
+    state.darts.push(
+      storedDart
+    );
+
+
+    currentPlayerData().score +=
+      countedValue;
+
+
+    state.turnStatus =
+      "normal";
+
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * CLOCK
+   */
+
+  function registerClock(dart) {
+
+    const target =
+      state.round;
+
+
+    const hit =
+      dart.multiplier === "D" &&
+      dart.base === target;
+
+
+    const storedDart = {
+
+      ...dart,
+
+      clockHit: hit
+
+    };
+
+
+    state.darts.push(
+      storedDart
+    );
+
+
+    if (hit) {
+
+      currentPlayerData().score +=
+        10;
+
+    }
+
+
+    state.turnStatus =
+      "normal";
+
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * BULL
+   */
+
+  function registerBull(dart) {
+
+    let countedValue = 0;
+
+
+    if (
+      dart.base === 25
+    ) {
+
+      countedValue =
+        dart.value;
+
+    }
+
+
+    const storedDart = {
+
+      ...dart,
+
+      countedValue:
+        countedValue
+
+    };
+
+
+    state.darts.push(
+      storedDart
+    );
+
+
+    currentPlayerData().score +=
+      countedValue;
+
+
+    state.turnStatus =
+      "normal";
+
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * 170
+   */
+
+  function setCheckoutTarget() {
+
+    const value =
+      parseInt(
+        document
+          .getElementById(
+            "checkoutInput"
+          )
+          .value
+      );
+
+
+    if (
+      !value ||
+      value < 2 ||
+      value > 170
+    ) {
+
+      alert(
+        "Bitte eine Zahl zwischen 2 und 170 eingeben."
+      );
+
+      return;
+
+    }
+
+
+    state.checkoutTarget =
+      value;
+
+
+    /*
+     * Neue Aufnahme beginnen.
+     */
+
+    state.darts = [];
+
+    state.turnStatus =
+      "normal";
+
+
+    updateGameScreen();
+
+  }
+
+
+  function register170(dart) {
+
+    state.darts.push(dart);
+
+
+    const sum =
+      state.darts.reduce(
+        (total, current) => {
+
+          return (
+            total +
+            current.value
+          );
+
+        },
+        0
+      );
+
+
+    /*
+     * Checkout ist nur gültig,
+     * wenn die Summe genau stimmt
+     * und der letzte Pfeil
+     * Doppel bzw. Bullseye ist.
+     */
+
+    if (
+      sum ===
+        state.checkoutTarget &&
+      dart.isDouble
+    ) {
+
+      state.turnStatus =
+        "checkout";
+
+
+      updateGameScreen();
+
+      return;
+
+    }
+
+
+    state.turnStatus =
+      "normal";
+
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * AUFNAHME BESTÄTIGEN
+   */
+
+  function confirmTurn() {
+
+    if (
+      state.darts.length === 0
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+     * SHANGHAI BONUS
+     */
+
+    if (
+      state.game === "shanghai"
+    ) {
+
+      const target =
+        state.round + 6;
+
+
+      const multipliers =
+        new Set(
+
+          state.darts
+
+            .filter(
+              dart =>
+                dart.base ===
+                target
+            )
+
+            .map(
+              dart =>
+                dart.multiplier
+            )
+
+        );
+
+
+      if (
+        multipliers.has("S") &&
+        multipliers.has("D") &&
+        multipliers.has("T")
+      ) {
+
+        currentPlayerData().score +=
+          50;
+
+      }
+
+    }
+
+
+    /*
+     * CLOCK
+     *
+     * Auch wenn bereits nach
+     * einem oder zwei Pfeilen
+     * bestätigt wird:
+     *
+     * Kein Treffer = -10.
+     */
+
+    if (
+      state.game === "clock"
+    ) {
+
+      const hasHit =
+        state.darts.some(
+          dart =>
+            dart.clockHit
+        );
+
+
+      if (!hasHit) {
+
+        currentPlayerData().score -=
+          10;
+
+      }
+
+    }
+
+
+    /*
+     * 170
+     */
+
+    if (
+      state.game === "170" &&
+      state.turnStatus ===
+        "checkout"
+    ) {
+
+      const data =
+        currentPlayerData();
+
+
+      if (
+        data.best170 === null
+      ) {
+
+        data.best170 =
+          state.checkoutTarget;
+
+      } else {
+
+        data.best170 =
+          Math.max(
+            data.best170,
+            state.checkoutTarget
+          );
+
+      }
+
+    }
+
+
+    /*
+     * Aufnahme zurücksetzen.
+     */
+
+    state.darts = [];
+
+    state.turnStatus =
+      "normal";
+
+    state.turnStart301 =
+      null;
+
+
+    if (
+      state.game === "170"
+    ) {
+
+      state.checkoutTarget =
+        null;
+
+
+      document
+        .getElementById(
+          "checkoutInput"
+        )
+        .value = "";
+
+    }
+
+
+    nextPlayer();
+
+  }
+
+
+  /*
+   * NÄCHSTER SPIELER
+   */
+
+  function nextPlayer() {
+
+    state.playerIndex++;
+
+
+    if (
+      state.playerIndex >=
+      players.length
+    ) {
+
+      state.playerIndex = 0;
+
+      state.round++;
+
+
+      if (
+        state.round > 7
+      ) {
+
+        finishGame();
+
+        return;
+
+      }
+
+    }
+
+
+    /*
+     * Spieler, die 301
+     * bereits ausgecheckt haben,
+     * werden übersprungen.
+     */
+
+    if (
+      state.game === "301"
+    ) {
+
+      let checked = 0;
+
+
+      while (
+        state.data[
+          currentPlayer()
+        ].finished301 &&
+
+        checked <
+          players.length
+      ) {
+
+        state.playerIndex++;
+
+
+        if (
+          state.playerIndex >=
+          players.length
+        ) {
+
+          state.playerIndex =
+            0;
+
+          state.round++;
+
+
+          if (
+            state.round > 7
+          ) {
+
+            finishGame();
+
+            return;
+
+          }
+
+        }
+
+
+        checked++;
+
+      }
+
+    }
+
+
+    setMultiplier("S");
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * LETZTEN PFEIL ZURÜCK
+   */
+
+  function undoLastDart() {
+
+    if (
+      state.darts.length === 0
+    ) {
+
+      return;
+
+    }
+
+
+    removeDart(
+      state.darts.length - 1
+    );
+
+  }
+
+
+  /*
+   * EINEN PFEIL LÖSCHEN
+   */
+
+  function removeDart(index) {
+
+    const remainingDarts =
+      state.darts.filter(
+        (dart, currentIndex) => {
+
+          return (
+            currentIndex !==
+            index
+          );
+
+        }
+      );
+
+
+    rebuildCurrentTurn(
+      remainingDarts
+    );
+
+  }
+
+
+  /*
+   * AKTUELLE AUFNAHME
+   * NEU BERECHNEN
+   */
+
+  function rebuildCurrentTurn(
+    remainingDarts
+  ) {
+
+    const data =
+      currentPlayerData();
+
+
+    /*
+     * Alte aktuelle Aufnahme
+     * zuerst zurückrechnen.
+     */
+
+    if (
+      state.game === "highscore"
+    ) {
+
+      data.score -=
+        state.darts.reduce(
+          (sum, dart) =>
+            sum + dart.value,
+          0
+        );
+
+    }
+
+
+    if (
+      state.game === "shanghai"
+    ) {
+
+      data.score -=
+        state.darts.reduce(
+          (sum, dart) => {
+
+            return (
+              sum +
+              (
+                dart.countedValue ||
+                0
+              )
+            );
+
+          },
+          0
+        );
+
+    }
+
+
+    if (
+      state.game === "clock"
+    ) {
+
+      data.score -=
+        state.darts.reduce(
+          (sum, dart) => {
+
+            return (
+              sum +
+              (
+                dart.clockHit
+                  ? 10
+                  : 0
+              )
+            );
+
+          },
+          0
+        );
+
+    }
+
+
+    if (
+      state.game === "bull"
+    ) {
+
+      data.score -=
+        state.darts.reduce(
+          (sum, dart) => {
+
+            return (
+              sum +
+              (
+                dart.countedValue ||
+                0
+              )
+            );
+
+          },
+          0
+        );
+
+    }
+
+
+    if (
+      state.game === "301" &&
+      state.turnStart301 !== null
+    ) {
+
+      data.score =
+        state.turnStart301;
+
+
+      data.finished301 =
+        false;
+
+    }
+
+
+    /*
+     * Aufnahme neu aufbauen.
+     */
+
+    state.darts = [];
+
+    state.turnStatus =
+      "normal";
+
+
+    remainingDarts.forEach(
+      dart => {
+
+        if (
+          state.game === "301"
+        ) {
+
+          register301({
+            ...dart
+          });
+
+        } else if (
+          state.game ===
+            "shanghai"
+        ) {
+
+          registerShanghai({
+            ...dart
+          });
+
+        } else if (
+          state.game ===
+            "clock"
+        ) {
+
+          registerClock({
+            ...dart
+          });
+
+        } else if (
+          state.game ===
+            "bull"
+        ) {
+
+          registerBull({
+            ...dart
+          });
+
+        } else if (
+          state.game ===
+            "170"
+        ) {
+
+          /*
+           * 170 neu berechnen.
+           */
+
+          state.darts.push({
+            ...dart
+          });
+
+
+          const sum =
+            state.darts.reduce(
+              (
+                total,
+                current
+              ) => {
+
+                return (
+                  total +
+                  current.value
+                );
+
+              },
+              0
+            );
+
+
+          if (
+            sum ===
+              state.checkoutTarget &&
+            dart.isDouble
+          ) {
+
+            state.turnStatus =
+              "checkout";
+
+          }
+
+        } else {
+
+          /*
+           * Highscore
+           */
+
+          state.darts.push({
+            ...dart
+          });
+
+
+          data.score +=
+            dart.value;
+
+        }
+
+      }
+    );
+
+
+    setMultiplier("S");
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * SPIEL ABSCHLIESSEN
+   */
+
+  function finishGame() {
+
+    if (
+      !results[state.game]
+    ) {
+
+      results[state.game] =
+        {};
+
+    }
+
+
+    players.forEach(player => {
+
+      const data =
+        state.data[player];
+
+
+      if (
+        state.game === "301"
+      ) {
+
+        /*
+         * Restpunkte speichern.
+         */
+
+        results["301"][player] =
+          data.score;
+
+      } else if (
+        state.game === "170"
+      ) {
+
+        /*
+         * Kein Checkout:
+         * -170 Punkte.
+         */
+
+        results["170"][player] =
+
+          data.best170 === null
+
+            ? -170
+
+            : data.best170;
+
+      } else {
+
+        results[
+          state.game
+        ][player] =
+          data.score;
+
+      }
+
+    });
+
+
+    saveData();
+
+
+    alert(
+      currentGameName() +
+      " abgeschlossen."
+    );
+
+
+    goHome();
+
+  }
+
+
+  /*
+   * ZWISCHENSTAND
+   */
+
+  function renderGameTable() {
+
+    let html =
+
+      "<table>" +
+
+      "<tr>" +
+
+      "<th>Spieler</th>" +
+
+      "<th>Wert</th>" +
+
+      "<th></th>" +
+
+      "</tr>";
+
+
+    players.forEach(
+      (player, index) => {
+
+        const data =
+          state.data[player];
+
+
+        let value =
+          data.score;
+
+
+        if (
+          state.game === "301"
+        ) {
+
+          value =
+            data.finished301
+
+              ? "0 ✓"
+
+              : data.score;
+
+        }
+
+
+        if (
+          state.game === "170"
+        ) {
+
+          value =
+            data.best170 === null
+
+              ? "–"
+
+              : data.best170;
+
+        }
+
+
+        html +=
+
+          "<tr>" +
+
+          "<td>" +
+          escapeHtml(player) +
+          "</td>" +
+
+          "<td>" +
+          value +
+          "</td>" +
+
+          "<td>" +
+
+          '<button ' +
+          'class="btn small-button" ' +
+          'onclick="correctLiveScore(' +
+          index +
+          ')">' +
+
+          "Korrigieren" +
+
+          "</button>" +
+
+          "</td>" +
+
+          "</tr>";
+
+      }
+    );
+
+
+    html += "</table>";
+
+
+    document
+      .getElementById(
+        "gameTable"
+      )
+      .innerHTML =
+        html;
+
+  }
+
+
+  /*
+   * AKTUELLEN SPIELWERT
+   * KORRIGIEREN
+   */
+
+  function correctLiveScore(
+    index
+  ) {
+
+    const player =
+      players[index];
+
+
+    const data =
+      state.data[player];
+
+
+    let oldValue;
+
+
+    if (
+      state.game === "170"
+    ) {
+
+      oldValue =
+        data.best170 === null
+          ? 0
+          : data.best170;
+
+    } else {
+
+      oldValue =
+        data.score;
+
+    }
+
+
+    const input =
+      prompt(
+        "Neuen Wert für " +
+        player +
+        " eingeben:",
+        oldValue
+      );
+
+
+    if (
+      input === null
+    ) {
+
+      return;
+
+    }
+
+
+    const newValue =
+      Number(input);
+
+
+    if (
+      !Number.isFinite(
+        newValue
+      )
+    ) {
+
+      alert(
+        "Ungültige Zahl."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      state.game === "170"
+    ) {
+
+      data.best170 =
+        newValue;
+
+    } else {
+
+      data.score =
+        newValue;
+
+    }
+
+
+    if (
+      state.game === "301"
+    ) {
+
+      data.finished301 =
+        newValue === 0;
+
+    }
+
+
+    updateGameScreen();
+
+  }
+
+
+  /*
+   * GESAMTWERTUNG
+   */
+
+  function renderOverallTable() {
+
+    let html =
+
+      "<table>" +
+
+      "<tr>" +
+
+      "<th>Spieler</th>";
+
+
+    GAMES.forEach(game => {
+
+      html +=
+
+        "<th>" +
+        game.name +
+        "</th>";
+
+    });
+
+
+    html +=
+
+      "<th>Gesamt</th>" +
+
+      "</tr>";
+
+
+    let rows =
+      players.map(player => {
+
+        let total = 0;
+
+
+        /*
+         * Highscore
+         */
+
+        const highscore =
+          results.highscore?.[
+            player
+          ];
+
+
+        if (
+          highscore !== null &&
+          highscore !== undefined
+        ) {
+
+          total +=
+            highscore;
+
+        }
+
+
+        /*
+         * Restpunkte 301
+         * werden abgezogen.
+         */
+
+        const remaining301 =
+          results["301"]?.[
+            player
+          ];
+
+
+        if (
+          remaining301 !== null &&
+          remaining301 !== undefined
+        ) {
+
+          total -=
+            remaining301;
+
+        }
+
+
+        /*
+         * Andere Spiele addieren.
+         */
+
+        [
+          "shanghai",
+          "clock",
+          "killer",
+          "170",
+          "bull"
+        ]
+        .forEach(gameId => {
+
+          const value =
+            results[gameId]?.[
+              player
+            ];
+
+
+          if (
+            value !== null &&
+            value !== undefined
+          ) {
+
+            total +=
+              value;
+
+          }
+
+        });
+
+
+        return {
+          player: player,
+          total: total
+        };
+
+      });
+
+
+    rows.sort(
+      (a, b) =>
+        b.total -
+        a.total
+    );
+
+
+    rows.forEach(
+      (row, index) => {
+
+        html +=
+
+          "<tr>" +
+
+          "<td>" +
+
+          (index + 1) +
+          ". " +
+          escapeHtml(
+            row.player
+          ) +
+
+          "</td>";
+
+
+        GAMES.forEach(game => {
+
+          const value =
+            results[
+              game.id
+            ]?.[
+              row.player
+            ];
+
+
+          html +=
+
+            "<td>" +
+
+            (
+              value === null ||
+              value === undefined
+
+                ? "–"
+
+                : value
+            ) +
+
+            "<br>" +
+
+            '<button ' +
+            'class="btn small-button" ' +
+
+            'onclick="correctSavedScore(' +
+
+            "'" +
+            escapeJavascriptString(
+              row.player
+            ) +
+            "'," +
+
+            "'" +
+            game.id +
+            "'" +
+
+            ')">' +
+
+            "Korrigieren" +
+
+            "</button>" +
+
+            "</td>";
+
+        });
+
+
+        html +=
+
+          "<td>" +
+
+          "<b>" +
+          row.total +
+          "</b>" +
+
+          "</td>" +
+
+          "</tr>";
+
+      }
+    );
+
+
+    html +=
+      "</table>";
+
+
+    document
+      .getElementById(
+        "overallTable"
+      )
+      .innerHTML =
+        html;
+
+  }
+
+
+  /*
+   * GESPEICHERTEN WERT
+   * KORRIGIEREN
+   */
+
+  function correctSavedScore(
+    player,
+    gameId
+  ) {
+
+    if (
+      !results[gameId]
+    ) {
+
+      results[gameId] =
+        {};
+
+    }
+
+
+    const oldValue =
+      results[gameId][player];
+
+
+    const game =
+      GAMES.find(
+        current =>
+          current.id === gameId
+      );
+
+
+    const input =
+      prompt(
+
+        player +
+        " – " +
+        game.name +
+        " korrigieren:",
+
+        oldValue === null ||
+        oldValue === undefined
+
+          ? ""
+
+          : oldValue
+
+      );
+
+
+    if (
+      input === null
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      input.trim() === ""
+    ) {
+
+      results[
+        gameId
+      ][player] =
+        null;
+
+    } else {
+
+      const value =
+        Number(input);
+
+
+      if (
+        !Number.isFinite(
+          value
+        )
+      ) {
+
+        alert(
+          "Ungültige Zahl."
+        );
+
+        return;
+
+      }
+
+
+      results[
+        gameId
+      ][player] =
+        value;
+
+    }
+
+
+    saveData();
+
+    renderOverallTable();
+
+  }
+
+
+  /*
+   * KILLER
+   */
+
+  function renderKiller() {
+
+    const box =
+      document.getElementById(
+        "killerRanking"
+      );
+
+
+    let html = "";
+
+
+    players.forEach(
+      (player, index) => {
+
+        html +=
+
+          '<div class="row" ' +
+          'style="margin-bottom:8px">' +
+
+          '<div style="flex:1">' +
+
+          "<b>" +
+          escapeHtml(player) +
+          "</b>" +
+
+          "</div>" +
+
+          '<select ' +
+          'id="killerSelect' +
+          index +
+          '" ' +
+          'style="max-width:220px">' +
+
+          '<option value="0">' +
+          "0 Punkte" +
+          "</option>" +
+
+          '<option value="100">' +
+          "1. Platz – 100" +
+          "</option>" +
+
+          '<option value="50">' +
+          "2. Platz – 50" +
+          "</option>";
+
+
+        if (
+          players.length >= 3
+        ) {
+
+          html +=
+
+            '<option value="25">' +
+            "3. Platz – 25" +
+            "</option>";
+
+        }
+
+
+        html +=
+
+          "</select>" +
+
+          "</div>";
+
+      }
+    );
+
+
+    box.innerHTML =
+      html;
+
+  }
+
+
+  function saveKiller() {
+
+    const values =
+      players.map(
+        (player, index) => {
+
+          return Number(
+
+            document
+              .getElementById(
+                "killerSelect" +
+                index
+              )
+              .value
+
+          );
+
+        }
+      );
+
+
+    /*
+     * 1. und 2. Platz
+     * müssen genau einmal
+     * vergeben sein.
+     */
+
+    if (
+      values.filter(
+        value =>
+          value === 100
+      ).length !== 1 ||
+
+      values.filter(
+        value =>
+          value === 50
+      ).length !== 1
+    ) {
+
+      alert(
+        "Bitte genau einen 1. Platz und einen 2. Platz vergeben."
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * Ab drei Spielern
+     * muss auch Platz 3
+     * vergeben werden.
+     */
+
+    if (
+      players.length >= 3 &&
+
+      values.filter(
+        value =>
+          value === 25
+      ).length !== 1
+    ) {
+
+      alert(
+        "Bitte genau einen 3. Platz vergeben."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      !results.killer
+    ) {
+
+      results.killer =
+        {};
+
+    }
+
+
+    players.forEach(
+      (player, index) => {
+
+        results.killer[
+          player
+        ] =
+          values[index];
+
+      }
+    );
+
+
+    saveData();
+
+
+    alert(
+      "Killer-Wertung gespeichert."
+    );
+
+
+    goHome();
+
+  }
+
+
+  /*
+   * ALLES LÖSCHEN
+   */
+
+  function resetAllResults() {
+
+    const input =
+      prompt(
+        "Zum Löschen aller Ergebnisse bitte RESET eingeben:"
+      );
+
+
+    if (
+      input !== "RESET"
+    ) {
+
+      if (
+        input !== null
+      ) {
+
+        alert(
+          "Nicht gelöscht."
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    results = {};
+
+
+    saveData();
+
+    renderOverallTable();
+
+
+    alert(
+      "Alle Ergebnisse wurden gelöscht."
+    );
+
+  }
+
+
+  /*
+   * SICHERHEIT FÜR TEXTE
+   */
+
+  function escapeHtml(value) {
+
+    return String(value)
+      .replace(
+
+        /[&<>"']/g,
+
+        character => {
+
+          const values = {
+
+            "&": "&amp;",
+
+            "<": "&lt;",
+
+            ">": "&gt;",
+
+            '"': "&quot;",
+
+            "'": "&#039;"
+
+          };
+
+
+          return values[
+            character
+          ];
+
+        }
+
+      );
+
+  }
+
+
+  function escapeJavascriptString(
+    value
+  ) {
+
+    return String(value)
+
+      .replace(
+        /\\/g,
+        "\\\\"
+      )
+
+      .replace(
+        /'/g,
+        "\\'"
+      );
+
+  }
+
+
+  /*
+   * APP STARTEN
+   */
+
+  loadData();
+
+</script>
+
+</body>
+</html>
