@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Dart 7 Spiele" />
+<meta name="theme-color" content="#111318" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<title>Dart 7 Spiele – iPad Test</title>
+<style>
+  :root{
+    --bg:#111318; --panel:#1a1e26; --panel2:#232937; --text:#f5f7fb;
+    --muted:#9aa5b5; --accent:#44d17a; --danger:#ff6464; --warn:#ffcf5a;
+    --line:#333b4a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  button,input,select{font:inherit}
+  .app{min-height:100vh;display:flex;flex-direction:column}
+  header{padding:14px 18px;background:#0c0e12;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{font-size:24px;margin:0}
+  .sub{color:var(--muted);font-size:14px}
+  main{flex:1;padding:16px}
+  .screen{display:none}
+  .screen.active{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .grow{flex:1}
+  input[type=text],input[type=number],select{
+    width:100%;background:#0f1218;color:var(--text);border:1px solid var(--line);
+    border-radius:12px;padding:14px;font-size:18px
+  }
+  .btn{border:0;border-radius:12px;padding:14px 18px;background:var(--panel2);color:var(--text);font-weight:700;min-height:52px}
+  .btn.primary{background:var(--accent);color:#07110a}
+  .btn.danger{background:var(--danger);color:#1b0505}
+  .btn.warn{background:var(--warn);color:#221900}
+  .btn:disabled{opacity:.45}
+  .players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .gamegrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .gamebtn{min-height:90px;font-size:18px}
+  .topline{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+  .stat{background:var(--panel2);border-radius:12px;padding:12px}
+  .stat b{display:block;font-size:22px;margin-top:4px}
+  .dartboard{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+  .num{min-height:58px;font-size:20px}
+  .multis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .throws{display:flex;gap:8px;flex-wrap:wrap;min-height:50px}
+  .pill{background:#0f1218;border:1px solid var(--line);padding:10px 12px;border-radius:999px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+  th:first-child,td:first-child{text-align:left}
+  .muted{color:var(--muted)}
+  .success{color:var(--accent);font-weight:800}
+  .dangerText{color:var(--danger);font-weight:800}
+  .notice{padding:12px;border-radius:12px;background:#0f1218;border:1px solid var(--line)}
+  .footerbar{position:sticky;bottom:0;background:#0c0e12;border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:10px}
+  @media (orientation:portrait){
+    .gamegrid{grid-template-columns:repeat(2,1fr)}
+    .topline{grid-template-columns:repeat(2,1fr)}
+    .dartboard{grid-template-columns:repeat(4,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div><h1>🎯 Dart – 7 Spiele</h1><div class="sub">iPad-Testversion</div></div>
+  <button class="btn" onclick="showScreen('home')">Start</button>
+</header>
+
+<main>
+<section id="home" class="screen active">
+  <div class="card">
+    <h2>Spieler</h2>
+    <div id="playerInputs" class="players"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="addPlayer()">+ Spieler</button>
+      <button class="btn danger" onclick="removePlayer()">– Spieler</button>
+      <button class="btn primary" onclick="savePlayers()">Spieler übernehmen</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Spiele</h2>
+    <div class="gamegrid" id="gameGrid"></div>
+  </div>
+  <div class="card">
+    <h2>Gesamtwertung</h2>
+    <div id="overallTable"></div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+  <div class="topline">
+    <div class="stat">Spiel<b id="gameName">–</b></div>
+    <div class="stat">Spieler<b id="playerName">–</b></div>
+    <div class="stat">Runde<b id="roundInfo">–</b></div>
+    <div class="stat">Spielwert<b id="gameScore">0</b></div>
+  </div>
+
+  <div id="gameNotice" class="notice"></div>
+
+  <div class="card">
+    <h3>Aktuelle Pfeile</h3>
+    <div id="throws" class="throws"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn warn" onclick="undoThrow()">↶ Letzten Pfeil zurück</button>
+      <button class="btn" onclick="miss()">Miss / 0</button>
+    </div>
+  </div>
+
+  <div class="card" id="checkoutBox" style="display:none">
+    <h3>170 – Zahl ansagen</h3>
+    <div class="row">
+      <div class="grow"><input id="checkoutTarget" type="number" min="2" max="170" placeholder="z. B. 101"></div>
+      <button class="btn primary" onclick="setCheckoutTarget()">Ansage übernehmen</button>
+    </div>
+    <div class="sub" id="checkoutHint" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card" id="killerBox" style="display:none">
+    <h3>Killer – Platzierung</h3>
+    <div id="killerRanking"></div>
+    <button class="btn primary" onclick="saveKiller()">Killer-Wertung speichern</button>
+  </div>
+
+  <div class="card" id="dartInput">
+    <h3>Feld wählen</h3>
+    <div class="multis">
+      <button class="btn" id="mS" onclick="setMult('S')">Single</button>
+      <button class="btn" id="mD" onclick="setMult('D')">Double</button>
+      <button class="btn" id="mT" onclick="setMult('T')">Triple</button>
+      <button class="btn" onclick="throwBull()">Bull / Bullseye</button>
+    </div>
+    <div class="dartboard" id="numbers"></div>
+  </div>
+
+  <div class="card">
+    <h3>Zwischenstand dieses Spiels</h3>
+    <div id="gameTable"></div>
+  </div>
+</section>
+</main>
+
+<div class="footerbar">
+  <button class="btn" onclick="showScreen('home')">← Übersicht</button>
+  <button class="btn danger" onclick="resetAll()">Alles zurücksetzen</button>
+</div>
+</div>
+
+<script>
+const games = [
+  {id:'highscore', name:'Highscore'},
+  {id:'301', name:'301 Double Out'},
+  {id:'shanghai', name:'Shanghai'},
+  {id:'clock', name:'Clock'},
+  {id:'killer', name:'Killer'},
+  {id:'170', name:'170'},
+  {id:'bull', name:'Bull'}
+];
+
+let players = ['Spieler 1','Spieler 2','Spieler 3','Spieler 4'];
+let results = {};
+let state = null;
+let mult = 'S';
+
+function init(){
+  const saved = localStorage.getItem('dart7test');
+  if(saved){
+    try{
+      const data = JSON.parse(saved);
+      players = data.players || players;
+      results = data.results || {};
+    }catch(e){}
+  }
+  renderPlayerInputs();
+  renderGames();
+  renderOverall();
+  buildNumbers();
+}
+function persist(){ localStorage.setItem('dart7test', JSON.stringify({players,results})); }
+
+function renderPlayerInputs(){
+  const box=document.getElementById('playerInputs'); box.innerHTML='';
+  players.forEach((p,i)=>{
+    const inp=document.createElement('input'); inp.type='text'; inp.value=p; inp.id='p'+i;
+    box.appendChild(inp);
+  });
+}
+function addPlayer(){ if(players.length>=12)return; players.push('Spieler '+(players.length+1)); renderPlayerInputs(); }
+function removePlayer(){ if(players.length<=2)return; players.pop(); renderPlayerInputs(); }
+function savePlayers(){
+  players=players.map((_,i)=>document.getElementById('p'+i).value.trim()||('Spieler '+(i+1)));
+  persist(); renderGames(); renderOverall();
+}
+function renderGames(){
+  const g=document.getElementById('gameGrid'); g.innerHTML='';
+  games.forEach(x=>{
+    const b=document.createElement('button'); b.className='btn gamebtn'; b.textContent=x.name;
+    b.onclick=()=>startGame(x.id); g.appendChild(b);
+  });
+}
+function ensureGame(id){
+  if(!results[id]) results[id]={};
+  players.forEach(p=>{ if(results[id][p]===undefined) results[id][p]=null; });
+}
+function startGame(id){
+  ensureGame(id);
+  state={game:id, playerIndex:0, round:1, darts:[], playerData:{}, checkoutTarget:null, turnStart301:null, completed:{}};
+  players.forEach(p=>{
+    state.playerData[p]={
+      score:id==='301'?301:0,
+      raw:0,
+      best170:null,
+      failed170:0,
+      finished301:false
+    };
+  });
+  document.getElementById('killerBox').style.display=id==='killer'?'block':'none';
+  document.getElementById('dartInput').style.display=id==='killer'?'none':'block';
+  document.getElementById('checkoutBox').style.display=id==='170'?'block':'none';
+  if(id==='killer') renderKiller();
+  setMult('S'); updateGameUI(); showScreen('game');
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='home') renderOverall();
+}
+
+function gameDef(){ return games.find(g=>g.id===state.game); }
+function curPlayer(){ return players[state.playerIndex]; }
+function pdata(){ return state.playerData[curPlayer()]; }
+
+function noticeText(){
+  const g=state.game;
+  if(g==='highscore') return '7 Runden × 3 Pfeile. Alle Punkte werden addiert.';
+  if(g==='301') return 'Start bei 301. Bust setzt den Stand auf den Beginn der Aufnahme zurück. Gültiges Finish nur mit Doppel oder Bullseye.';
+  if(g==='shanghai') return `Ziel dieser Runde: ${state.round}. Runde 1 beginnt auf 7; intern wird 7–13 gespielt.`;
+  if(g==='clock') return `Ziel: Doppel ${state.round}. Jeder Treffer +10, kein Treffer in der Aufnahme −10.`;
+  if(g==='170') return state.checkoutTarget ? `Angesagt: ${state.checkoutTarget}. Bis zu 3 Pfeile, Checkout muss auf Doppel oder Bullseye enden.` : 'Vor jedem Versuch eine Zahl bis 170 ansagen.';
+  if(g==='bull') return 'Nur Bull zählt: Outer Bull = 25, Bullseye = 50.';
+  if(g==='killer') return 'Platz 1 = 100, Platz 2 = 50, Platz 3 = 25, alle anderen = 0.';
+  return '';
+}
+
+function updateGameUI(){
+  if(!state)return;
+  document.getElementById('gameName').textContent=gameDef().name;
+  document.getElementById('playerName').textContent=curPlayer();
+  const displayRound = state.game==='shanghai' ? (state.round+6) : state.round;
+  document.getElementById('roundInfo').textContent=`${state.round}/7${state.game==='shanghai'?' • Ziel '+displayRound:''}`;
+  document.getElementById('gameScore').textContent=currentDisplayScore();
+  document.getElementById('gameNotice').textContent=noticeText();
+  document.getElementById('throws').innerHTML=state.darts.map(d=>`<span class="pill">${d.label} = ${d.value}</span>`).join('') || '<span class="muted">Noch kein Pfeil</span>';
+  renderGameTable();
+  if(state.game==='170') document.getElementById('checkoutHint').textContent=state.checkoutTarget?`Aktuelle Ansage: ${state.checkoutTarget}`:'Noch keine Zahl angesagt.';
+}
+function currentDisplayScore(){
+  const d=pdata();
+  if(state.game==='301') return d.finished301 ? '0 ✓' : d.score;
+  if(state.game==='170') return d.best170===null ? 0 : d.best170;
+  return d.score;
+}
+function setMult(m){ mult=m; ['S','D','T'].forEach(x=>document.getElementById('m'+x).style.outline=x===m?'3px solid #44d17a':'none'); }
+function buildNumbers(){
+  const box=document.getElementById('numbers'); box.innerHTML='';
+  for(let i=1;i<=20;i++){
+    const b=document.createElement('button'); b.className='btn num'; b.textContent=i; b.onclick=()=>throwNumber(i); box.appendChild(b);
+  }
+}
+
+function throwNumber(n){
+  if(!state || state.game==='killer')return;
+  if(state.game==='170' && !state.checkoutTarget){ alert('Bitte zuerst eine Checkout-Zahl ansagen.'); return; }
+  let val = mult==='S'?n:mult==='D'?2*n:3*n;
+  registerThrow({base:n,mult,label:mult+n,value:val,isDouble:mult==='D',isBull:false});
+}
+function throwBull(){
+  if(!state || state.game==='killer')return;
+  if(state.game==='170' && !state.checkoutTarget){ alert('Bitte zuerst eine Checkout-Zahl ansagen.'); return; }
+  const bullseye = confirm('OK = Bullseye 50\nAbbrechen = Outer Bull 25');
+  registerThrow({base:25,mult:bullseye?'DB':'SB',label:bullseye?'Bullseye':'Bull 25',value:bullseye?50:25,isDouble:bullseye,isBull:true});
+}
+function miss(){ if(!state || state.game==='killer')return; registerThrow({base:0,mult:'M',label:'Miss',value:0,isDouble:false,isBull:false}); }
+
+function registerThrow(d){
+  if(state.darts.length>=3)return;
+  if(state.game==='301') return register301(d);
+  if(state.game==='shanghai') return registerShanghai(d);
+  if(state.game==='clock') return registerClock(d);
+  if(state.game==='170') return register170(d);
+  if(state.game==='bull') return registerBull(d);
+  state.darts.push(d);
+  pdata().score += d.value;
+  if(state.darts.length===3) endTurn();
+  updateGameUI();
+}
+
+function register301(d){
+  const pd=pdata();
+  if(pd.finished301){ endTurn(); updateGameUI(); return; }
+  if(state.darts.length===0) state.turnStart301=pd.score;
+  state.darts.push(d);
+  const next = pd.score-d.value;
+  const bust = next<0 || next===1 || (next===0 && !d.isDouble);
+  if(bust){
+    pd.score=state.turnStart301;
+    setTimeout(()=>{ alert('Bust – Stand zurück auf '+pd.score); endTurn(); updateGameUI(); },50);
+    updateGameUI(); return;
+  }
+  pd.score=next;
+  if(pd.score===0 && d.isDouble){
+    pd.finished301=true;
+    setTimeout(()=>{ alert('Checkout geschafft!'); finish301Player(); },50);
+    updateGameUI(); return;
+  }
+  if(state.darts.length===3) endTurn();
+  updateGameUI();
+}
+
+function registerShanghai(d){
+  const target=state.round+6;
+  const counted = (d.base===target && ['S','D','T'].includes(d.mult)) ? d.value : 0;
+  state.darts.push({...d,counted});
+  pdata().score += counted;
+  if(state.darts.length===3){
+    const kinds=new Set(state.darts.filter(x=>x.base===target).map(x=>x.mult));
+    if(kinds.has('S')&&kinds.has('D')&&kinds.has('T')) pdata().score += 50;
+    endTurn();
+  }
+  updateGameUI();
+}
+function registerClock(d){
+  const target=state.round;
+  const hit = d.mult==='D' && d.base===target;
+  state.darts.push({...d,hit});
+  if(hit) pdata().score += 10;
+  if(state.darts.length===3){
+    if(!state.darts.some(x=>x.hit)) pdata().score -= 10;
+    endTurn();
+  }
+  updateGameUI();
+}
+function registerBull(d){
+  const val=d.isBull?d.value:0;
+  state.darts.push({...d,counted:val}); pdata().score+=val;
+  if(state.darts.length===3) endTurn();
+  updateGameUI();
+}
+function setCheckoutTarget(){
+  const n=parseInt(document.getElementById('checkoutTarget').value,10);
+  if(!n || n<2 || n>170){ alert('Bitte eine Zahl zwischen 2 und 170 eingeben.'); return; }
+  state.checkoutTarget=n; state.darts=[]; updateGameUI();
+}
+function register170(d){
+  state.darts.push(d);
+  const sum=state.darts.reduce((a,x)=>a+x.value,0);
+  if(sum===state.checkoutTarget && d.isDouble){
+    const pd=pdata();
+    pd.best170 = pd.best170===null ? state.checkoutTarget : Math.max(pd.best170,state.checkoutTarget);
+    alert('Checkout '+state.checkoutTarget+' geschafft!');
+    endTurn(true);
+    updateGameUI(); return;
+  }
+  if(sum>state.checkoutTarget || state.darts.length===3){
+    pdata().failed170 += 1;
+    endTurn(false);
+  }
+  updateGameUI();
+}
+
+function finish301Player(){
+  // mark current player as done and advance without requiring remaining rounds
+  const pd=pdata(); pd.finished301=true;
+  state.darts=[]; state.turnStart301=null;
+  nextPlayerOrRound();
+}
+function endTurn(success170){
+  state.darts=[]; state.turnStart301=null;
+  if(state.game==='170'){
+    state.checkoutTarget=null;
+    document.getElementById('checkoutTarget').value='';
+  }
+  nextPlayerOrRound();
+}
+function nextPlayerOrRound(){
+  state.playerIndex++;
+  if(state.playerIndex>=players.length){
+    state.playerIndex=0;
+    state.round++;
+    if(state.round>7){ finishGame(); return; }
+  }
+  // skip 301 players who already checked out, but still retain 0
+  if(state.game==='301'){
+    let guard=0;
+    while(state.playerData[curPlayer()].finished301 && guard<players.length){
+      state.playerIndex++;
+      if(state.playerIndex>=players.length){state.playerIndex=0;state.round++; if(state.round>7){finishGame();return;}}
+      guard++;
+    }
+  }
+  updateGameUI();
+}
+
+function undoThrow(){
+  if(!state || state.darts.length===0){return;}
+  const d=state.darts.pop();
+  const pd=pdata();
+  if(state.game==='highscore') pd.score-=d.value;
+  if(state.game==='shanghai') pd.score-=d.counted||0;
+  if(state.game==='clock' && d.hit) pd.score-=10;
+  if(state.game==='bull') pd.score-=d.counted||0;
+  if(state.game==='301'){
+    // easiest reliable correction: restore to turn start and replay remaining darts
+    const remaining=[...state.darts]; pd.score=state.turnStart301; state.darts=[];
+    remaining.forEach(x=>{
+      state.darts.push(x); pd.score-=x.value;
+    });
+  }
+  updateGameUI();
+}
+
+function finishGame(){
+  const id=state.game; ensureGame(id);
+  players.forEach(p=>{
+    const d=state.playerData[p];
+    if(id==='301') results[id][p]=d.score; // Restpunkte; overall uses subtraction from highscore
+    else if(id==='170') results[id][p]=d.best170===null ? -170 : d.best170;
+    else results[id][p]=d.score;
+  });
+  persist();
+  alert(gameDef().name+' abgeschlossen.');
+  renderOverall(); showScreen('home');
+}
+
+function renderGameTable(){
+  if(!state)return;
+  let html='<table><tr><th>Spieler</th><th>Wert</th></tr>';
+  players.forEach(p=>{
+    const d=state.playerData[p];
+    let v=d.score;
+    if(state.game==='301') v=d.finished301?'0 ✓':d.score;
+    if(state.game==='170') v=d.best170===null?'–':d.best170;
+    html+=`<tr><td>${escapeHtml(p)}</td><td>${v}</td></tr>`;
+  });
+  html+='</table>'; document.getElementById('gameTable').innerHTML=html;
+}
+
+function renderOverall(){
+  let html='<table><tr><th>Spieler</th>';
+  games.forEach(g=>html+=`<th>${g.name}</th>`);
+  html+='<th>Gesamt</th></tr>';
+  const rows=players.map(p=>{
+    let total=0, cells=[];
+    games.forEach(g=>{
+      const v=results[g.id]?.[p];
+      cells.push(v);
+      if(g.id==='301'){
+        const hs=results['highscore']?.[p];
+        if(v!==null&&v!==undefined && hs!==null&&hs!==undefined){
+          // 301 contributes via rule Highscore - rest; to avoid double-counting highscore,
+          // overall displays each raw game, while total applies combined highscore/301 logic once.
+        }
+      }
+    });
+    // Total: all games, but Highscore + 301 are combined as (Highscore - 301 rest)
+    const hs=results.highscore?.[p];
+    const rest=results['301']?.[p];
+    if(hs!==null&&hs!==undefined) total += hs;
+    if(rest!==null&&rest!==undefined) total -= rest;
+    ['shanghai','clock','killer','170','bull'].forEach(id=>{
+      const v=results[id]?.[p];
+      if(v!==null&&v!==undefined) total+=v;
+    });
+    return {p,total,cells};
+  }).sort((a,b)=>b.total-a.total);
+
+  rows.forEach((r,idx)=>{
+    html+=`<tr><td>${idx+1}. ${escapeHtml(r.p)}</td>`;
+    r.cells.forEach((v,i)=> html+=`<td>${v===null||v===undefined?'–':v}</td>`);
+    html+=`<td><b>${r.total}</b></td></tr>`;
+  });
+  html+='</table>';
+  document.getElementById('overallTable').innerHTML=html;
+}
+
+function renderKiller(){
+  const box=document.getElementById('killerRanking');
+  let html='';
+  players.forEach((p,i)=>{
+    html+=`<div class="row" style="margin-bottom:8px"><div class="grow"><b>${escapeHtml(p)}</b></div>
+      <select id="killer_${i}" style="max-width:220px">
+        <option value="0">0 Punkte</option>
+        <option value="100">1. Platz – 100</option>
+        <option value="50">2. Platz – 50</option>
+        <option value="25">3. Platz – 25</option>
+      </select></div>`;
+  });
+  box.innerHTML=html;
+}
+function saveKiller(){
+  const vals=players.map((p,i)=>parseInt(document.getElementById('killer_'+i).value,10));
+  if(vals.filter(x=>x===100).length!==1 || vals.filter(x=>x===50).length!==1 || vals.filter(x=>x===25).length!==1){
+    alert('Bitte genau einen 1., einen 2. und einen 3. Platz vergeben.'); return;
+  }
+  ensureGame('killer'); players.forEach((p,i)=>results.killer[p]=vals[i]);
+  persist(); alert('Killer-Wertung gespeichert.'); renderOverall(); showScreen('home');
+}
+
+function resetAll(){
+  if(!confirm('Wirklich alle Ergebnisse löschen?')) return;
+  results={}; persist(); renderOverall(); showScreen('home');
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+init();
+</script>
+</body>
+</html>

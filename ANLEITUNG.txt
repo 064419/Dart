@@ -1,0 +1,23 @@
+DART 7 SPIELE – GITHUB PAGES
+
+Diese Dateien direkt in dein GitHub-Repository hochladen:
+
+1. index.html
+2. icon.svg
+3. icon-180.png
+
+Danach:
+Settings → Pages
+Source: Deploy from a branch
+Branch: main
+Ordner: / (root)
+Save
+
+Nach kurzer Zeit erscheint deine GitHub-Pages-Adresse.
+Diese in Safari auf dem iPad öffnen.
+
+Für ein App-Symbol:
+Safari → Teilen → Zum Home-Bildschirm → Hinzufügen
+
+Wichtig:
+Die Testversion speichert Spieler und Ergebnisse lokal im Browser des iPads.
